@@ -96,6 +96,32 @@ def dashboard():
 
     return render_template('dashboard.html', tasks=tasks, weekly_tasks=weekly_tasks)
 
+@app.route('/view_tasks')
+def view_tasks():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    pending_tasks = conn.execute("""
+        SELECT * FROM tasks
+        WHERE user_id = ? AND status = 'pending'
+        ORDER BY deadline
+    """, (session['user_id'],)).fetchall()
+
+    completed_tasks = conn.execute("""
+        SELECT * FROM tasks
+        WHERE user_id = ? AND status = 'completed'
+        ORDER BY deadline DESC
+    """, (session['user_id'],)).fetchall()
+
+    conn.close()
+
+    return render_template(
+        'view_task.html',
+        pending_tasks=pending_tasks,
+        completed_tasks=completed_tasks
+    )
+
 # ---------------- ADD TASK ----------------
 @app.route('/add_task', methods=['GET', 'POST'])
 def add_task():
