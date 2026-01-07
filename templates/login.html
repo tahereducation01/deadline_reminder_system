@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Luxury Deadline Reminder{% endblock %}
+
+{% block content %}
+<div class="luxury-card" style="max-width: 500px; margin: 2rem auto;">
+    <h1 style="text-align: center; color: var(--rose-gold); margin-bottom: 2rem;">
+        Welcome Back 🌸
+    </h1>
+    
+    <form method="POST" class="luxury-form">
+        <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        
+        <button type="submit" class="btn-luxury" style="width: 100%;">Login</button>
+    </form>
+    
+    <p style="text-align: center; margin-top: 1.5rem;">
+        Don't have an account? 
+        <a href="{{ url_for('register') }}" style="color: var(--primary-pink); text-decoration: none;">
+            Register here
+        </a>
+    </p>
+</div>
+{% endblock %}

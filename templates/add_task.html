@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Add Task - Luxury Deadline Reminder{% endblock %}
+
+{% block content %}
+<div class="luxury-card" style="max-width: 600px; margin: 0 auto;">
+    <h1 style="text-align: center; color: var(--rose-gold); margin-bottom: 2rem;">
+        Add New Task 🌸
+    </h1>
+    
+    <form method="POST" class="luxury-form">
+        <div class="form-group">
+            <label class="form-label" for="title">Task Title</label>
+            <input type="text" class="form-control" id="title" name="title" required placeholder="Enter task title">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="description">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter task description (optional)"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="deadline">Deadline</label>
+            <input type="datetime-local" class="form-control" id="deadline" name="deadline" required>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="reminder_type">Reminder Type</label>
+            <select class="form-control" id="reminder_type" name="reminder_type" required>
+                <option value="popup">Popup Notification</option>
+                <option value="email">Email Reminder</option>
+                <option value="both">Both</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="reminder_interval">Reminder Time</label>
+            <select class="form-control" id="reminder_interval" name="reminder_interval" required>
+                <option value="1 minute before">1 Minute Before</option>
+                <option value="15 minutes before">15 Minutes Before</option>
+                <option value="1 hour before">1 Hour Before</option>
+                <option value="6 hours before">6 Hours Before</option>
+                <option value="1 day before">1 Day Before</option>
+                <option value="2 days before">2 Days Before</option>
+                <option value="1 week before">1 Week Before</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn-luxury" style="flex: 1;">Add Task</button>
+            <a href="{{ url_for('dashboard') }}" class="btn-luxury btn-secondary" style="flex: 1; text-align: center;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Set min datetime to current time
+    const now = new Date();
+    const localDateTime = now.toISOString().slice(0, 16);
+    document.getElementById('deadline').min = localDateTime;
+</script>
+{% endblock %}

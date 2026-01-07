@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Luxury Deadline Reminder{% endblock %}
+
+{% block content %}
+<!-- improved hero section for better readability -->
+<div class="hero-section crystal-effect">
+    <div class="hero-overlay" aria-hidden="true"></div>
+
+    <div class="hero-content luxury-card" role="region" aria-label="Intro">
+        <h1 class="hero-title">🌸 Luxury Deadline Reminder</h1>
+        <p class="hero-subtitle">Elegant task management for the modern woman</p>
+
+        <p class="hero-quote">
+            "Productivity is never an accident. It is always the result of a commitment to excellence,
+            intelligent planning, and focused effort." - Paul J. Meyer
+        </p>
+
+        <div id="live-clock" class="live-clock" aria-live="polite"></div>
+
+        <div class="hero-ctas">
+            {% if session.user_id %}
+                <a href="{{ url_for('dashboard') }}" class="btn-luxury btn-large">Go to Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn-luxury btn-large" style="margin-right: 1rem;">Login</a>
+                <a href="{{ url_for('register') }}" class="btn-luxury btn-secondary btn-large">Register</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="luxury-card" style="text-align: center;">
+    <h2 style="color: var(--rose-gold); margin-bottom: 1.5rem;">Why Choose Our System?</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+        <div>
+            <h3 style="color: var(--primary-pink);">✨ Beautiful Design</h3>
+            <p>Luxurious feminine interface that makes task management delightful</p>
+        </div>
+        <div>
+            <h3 style="color: var(--primary-pink);">⏰ Smart Reminders</h3>
+            <p>Never miss a deadline with customizable reminder options</p>
+        </div>
+        <div>
+            <h3 style="color: var(--primary-pink);">📱 Easy to Use</h3>
+            <p>Intuitive interface that works perfectly on all devices</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

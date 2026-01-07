@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}My Tasks - Luxury Deadline Reminder{% endblock %}
+
+{% block content %}
+<div class="luxury-card">
+    <h1 style="color: var(--rose-gold); margin-bottom: 2rem; text-align: center;">
+        My Tasks 🌸
+    </h1>
+    
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; justify-content: center;">
+        <a href="#pending" class="btn-luxury">Pending Tasks</a>
+        <a href="#completed" class="btn-luxury btn-secondary">Completed Tasks</a>
+    </div>
+
+    <section id="pending" style="margin-bottom: 3rem;">
+        <h2 style="color: var(--primary-pink); margin-bottom: 1.5rem;">📋 Pending Tasks</h2>
+        
+        {% if pending_tasks %}
+            <div class="task-grid">
+                {% for task in pending_tasks %}
+                    <div class="task-card">
+                        <div class="task-title">{{ task.title }}</div>
+                        <p style="color: #666; margin-bottom: 1rem;">{{ task.description or 'No description' }}</p>
+                        <div class="task-deadline">
+                            ⏰ Due: {{ task.deadline.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                        <div style="color: var(--dusty-rose); font-size: 0.9rem; margin: 0.5rem 0;">
+                            Reminder: {{ task.reminder_type|title }} - {{ task.reminder_interval }}
+                        </div>
+                        <!-- In the pending tasks section of view_task.html -->
+<div class="task-actions">
+    <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn-luxury btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;">
+        Edit
+    </a>
+    <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-luxury" style="padding: 8px 15px; font-size: 0.9rem;">
+        Mark Complete
+    </a>
+</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 2rem; color: var(--dusty-rose);">
+                <h3>No pending tasks! 🎉</h3>
+                <p>You're all caught up. Great job!</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section id="completed">
+        <h2 style="color: var(--primary-pink); margin-bottom: 1.5rem;">✅ Completed Tasks</h2>
+        
+        {% if completed_tasks %}
+            <div class="task-grid">
+                {% for task in completed_tasks %}
+                    <div class="task-card" style="opacity: 0.8;">
+                        <div class="task-title" style="text-decoration: line-through;">{{ task.title }}</div>
+                        <p style="color: #666; margin-bottom: 1rem;">{{ task.description or 'No description' }}</p>
+                        <div style="color: #87e487; font-weight: bold;">
+                            ✅ Completed
+                        </div>
+                        <div style="color: var(--dusty-rose); font-size: 0.9rem; margin-top: 0.5rem;">
+                            Was due: {{ task.deadline.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                        <div class="task-actions">
+                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn-luxury btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;">
+                                Edit
+                            </a>
+                            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="btn-luxury btn-danger" style="padding: 8px 15px; font-size: 0.9rem;">
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 2rem; color: var(--dusty-rose);">
+                <h3>No completed tasks yet</h3>
+                <p>Complete some tasks to see them here!</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

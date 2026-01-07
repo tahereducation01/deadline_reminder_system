@@ -1,0 +1,151 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+import sqlite3
+from datetime import datetime
+
+app = Flask(__name__)
+app.config.from_object('config.Config')
+
+DATABASE = "database.db"
+
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# ---------------- REGISTER ----------------
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            flash('Passwords do not match!', 'error')
+            return redirect(url_for('register'))
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+                (username, email, password)
+            )
+            conn.commit()
+            flash('Registration successful! Please login.', 'success')
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('Username or email already exists!', 'error')
+        finally:
+            conn.close()
+
+    return render_template('register.html')
+
+# ---------------- LOGIN ----------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        conn = get_db_connection()
+        user = conn.execute(
+            "SELECT * FROM users WHERE email = ? AND password = ?",
+            (email, password)
+        ).fetchone()
+        conn.close()
+
+        if user:
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            flash('Login successful!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid email or password!', 'error')
+
+    return render_template('login.html')
+
+# ---------------- DASHBOARD ----------------
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    tasks = conn.execute("""
+        SELECT *,
+        CAST((julianday(deadline) - julianday('now')) * 86400 AS INTEGER) AS seconds_remaining
+        FROM tasks
+        WHERE user_id = ? AND status = 'pending'
+        ORDER BY deadline
+    """, (session['user_id'],)).fetchall()
+
+    weekly_tasks = conn.execute("""
+        SELECT COUNT(*) FROM tasks
+        WHERE user_id = ? AND status = 'pending'
+        AND deadline BETWEEN datetime('now') AND datetime('now', '+7 days')
+    """, (session['user_id'],)).fetchone()[0]
+
+    conn.close()
+
+    return render_template('dashboard.html', tasks=tasks, weekly_tasks=weekly_tasks)
+
+# ---------------- ADD TASK ----------------
+@app.route('/add_task', methods=['GET', 'POST'])
+def add_task():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        conn = get_db_connection()
+        conn.execute("""
+            INSERT INTO tasks (user_id, title, description, deadline, reminder_type, reminder_interval)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            session['user_id'],
+            request.form['title'],
+            request.form['description'],
+            request.form['deadline'],
+            request.form['reminder_type'],
+            request.form['reminder_interval']
+        ))
+        conn.commit()
+        conn.close()
+
+        flash('Task added successfully!', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('add_task.html')
+
+# ---------------- COMPLETE TASK ----------------
+@app.route('/complete_task/<int:task_id>')
+def complete_task(task_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    conn.execute(
+        "UPDATE tasks SET status='completed' WHERE id=? AND user_id=?",
+        (task_id, session['user_id'])
+    )
+    conn.commit()
+    conn.close()
+
+    flash('Task marked as completed!', 'success')
+    return redirect(url_for('dashboard'))
+
+# ---------------- LOGOUT ----------------
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Logged out successfully!', 'success')
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)

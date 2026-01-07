@@ -1,0 +1,195 @@
+
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Luxury Deadline Reminder{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="welcome-card">
+    <h1>Welcome, {{ session.username }}! 🌸</h1>
+    <p>Manage your deadlines with elegance and ease</p>
+</div>
+
+<!-- Stats Section -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ weekly_tasks }}</div>
+        <div>Tasks Due This Week</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ tasks|length }}</div>
+        <div>Total Pending Tasks</div>
+    </div>
+</div>
+
+<!-- Upcoming Deadlines Section -->
+<div class="luxury-card">
+    <div class="section-header">
+        <h2>Your Upcoming Deadlines</h2>
+        <a href="{{ url_for('add_task') }}" class="btn-luxury">+ Add New Task</a>
+    </div>
+
+    {% if tasks %}
+        <div class="task-grid">
+            {% for task in tasks %}
+                <div class="task-card" style="position: relative;">
+                    <!-- Countdown Badge -->
+                    {% if task.overdue %}
+                        <div class="countdown-badge badge-overdue">OVERDUE</div>
+                    {% elif task.countdown.days == 0 and task.countdown.hours < 24 %}
+                        <div class="countdown-badge badge-urgent">URGENT</div>
+                    {% else %}
+                        <div class="countdown-badge badge-normal">ON TIME</div>
+                    {% endif %}
+                    
+                    <div class="task-title">{{ task.title }}</div>
+                    <p class="task-description">{{ task.description|default('No description') }}</p>
+                    
+                    <!-- Real-time Countdown -->
+                    <div data-deadline="{{ task.deadline.strftime('%Y-%m-%dT%H:%M:%S') }}">
+                        {% if task.overdue %}
+                            <div class="countdown-container overdue">
+                                <div style="text-align: center; font-weight: bold; margin-bottom: 0.5rem;">
+                                    ⚠️ Overdue!
+                                </div>
+                                <div style="text-align: center; font-size: 1.1rem;">
+                                    Please complete this task immediately
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="countdown-container {% if task.countdown.days == 0 and task.countdown.hours < 24 %}urgent{% endif %}">
+                                <div style="text-align: center; color: var(--rose-gold); font-weight: bold; margin-bottom: 0.8rem;">
+                                    ⏰ Time Remaining
+                                </div>
+                                <div class="countdown-timer">
+                                    <div class="countdown-unit">
+                                        <span class="countdown-value">{{ "%02d"|format(task.countdown.days) }}</span>
+                                        <span class="countdown-label">Days</span>
+                                    </div>
+                                    <div class="countdown-unit">
+                                        <span class="countdown-value">{{ "%02d"|format(task.countdown.hours) }}</span>
+                                        <span class="countdown-label">Hours</span>
+                                    </div>
+                                    <div class="countdown-unit">
+                                        <span class="countdown-value">{{ "%02d"|format(task.countdown.minutes) }}</span>
+                                        <span class="countdown-label">Minutes</span>
+                                    </div>
+                                    <div class="countdown-unit">
+                                        <span class="countdown-value">{{ "%02d"|format(task.countdown.seconds) }}</span>
+                                        <span class="countdown-label">Seconds</span>
+                                    </div>
+                                </div>
+                                {% if task.countdown.days == 0 and task.countdown.hours < 24 %}
+                                    <div style="text-align: center; color: #ff6b6b; font-size: 0.95rem; margin-top: 0.8rem; font-weight: bold;">🚨 Urgent - Complete ASAP!</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="task-deadline">
+                        📅 Due: {{ task.deadline.strftime('%Y-%m-%d %H:%M') }}
+                    </div>
+                    <div style="color: var(--dusty-rose); font-size: 0.9rem; margin-top: 0.5rem;">
+                        🔔 {{ task.reminder_type|title }} reminder - {{ task.reminder_interval }}
+                    </div>
+                    <div class="task-actions">
+                        <a href="{{ url_for('complete_task_dashboard', task_id=task.id) }}" 
+                           class="btn-luxury btn-success" 
+                           onclick='return confirm("Mark {{ task.title|e }} as completed? 🌸")'>
+                            ✅ Done
+                        </a>
+                        <a href="{{ url_for('edit_task', task_id=task.id) }}" 
+                           class="btn-luxury btn-secondary">
+                            ✏️ Edit
+                        </a>
+                        <a href="{{ url_for('delete_task', task_id=task.id) }}" 
+                           class="btn-luxury btn-danger" 
+                           onclick='return confirm("Are you sure you want to delete {{ task.title|e }}?")'>
+                            🗑️ Delete
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No tasks yet! 🌸</h3>
+            <p>Start by adding your first task to stay organized and never miss a deadline.</p>
+            <a href="{{ url_for('add_task') }}" class="btn-luxury btn-large" style="margin-top: 1rem;">
+                Add Your First Task
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for live countdown updates -->
+<script>
+    function updateCountdowns() {
+        document.querySelectorAll('[data-deadline]').forEach(element => {
+            const deadline = new Date(element.dataset.deadline);
+            const now = new Date();
+            const diff = deadline - now;
+            
+            if (diff <= 0) {
+                // Task is overdue
+                if (!element.querySelector('.overdue')) {
+                    element.innerHTML = `
+                        <div class="countdown-container overdue">
+                            <div style="text-align: center; font-weight: bold; margin-bottom: 0.5rem;">
+                                ⚠️ Overdue!
+                            </div>
+                            <div style="text-align: center; font-size: 1.1rem;">
+                                Please complete this task immediately
+                            </div>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            const isUrgent = days === 0 && hours < 24;
+            
+            element.querySelector('.countdown-timer').innerHTML = `
+                <div class="countdown-unit">
+                    <span class="countdown-value">${String(days).padStart(2, '0')}</span>
+                    <span class="countdown-label">Days</span>
+                </div>
+                <div class="countdown-unit">
+                    <span class="countdown-value">${String(hours).padStart(2, '0')}</span>
+                    <span class="countdown-label">Hours</span>
+                </div>
+                <div class="countdown-unit">
+                    <span class="countdown-value">${String(minutes).padStart(2, '0')}</span>
+                    <span class="countdown-label">Minutes</span>
+                </div>
+                <div class="countdown-unit">
+                    <span class="countdown-value">${String(seconds).padStart(2, '0')}</span>
+                    <span class="countdown-label">Seconds</span>
+                </div>
+            `;
+            
+            // Update urgency display
+            if (isUrgent && !element.querySelector('.urgent-message')) {
+                const container = element.querySelector('.countdown-container');
+                if (container && !container.querySelector('.urgent-message')) {
+                    const urgentMsg = document.createElement('div');
+                    urgentMsg.innerHTML = `<div style="text-align: center; color: #ff6b6b; font-size: 0.95rem; margin-top: 0.8rem; font-weight: bold;">🚨 Urgent - Complete ASAP!</div>`;
+                    urgentMsg.className = 'urgent-message';
+                    container.appendChild(urgentMsg);
+                }
+            }
+        });
+    }
+    
+    // Update countdowns every second
+    setInterval(updateCountdowns, 1000);
+    
+    // Initial update
+    updateCountdowns();
+</script>
+{% endblock %}

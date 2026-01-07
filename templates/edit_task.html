@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Task - Luxury Deadline Reminder{% endblock %}
+
+{% block content %}
+<div class="luxury-card" style="max-width: 600px; margin: 0 auto;">
+    <h1 style="text-align: center; color: var(--rose-gold); margin-bottom: 2rem;">
+        Edit Task 🌸
+    </h1>
+    
+    <form method="POST" class="luxury-form">
+        <div class="form-group">
+            <label class="form-label" for="title">Task Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ task.title }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="description">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="4">{{ task.description }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="deadline">Deadline</label>
+            <input type="datetime-local" class="form-control" id="deadline" name="deadline" 
+                   value="{{ task.deadline.strftime('%Y-%m-%dT%H:%M') }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="reminder_type">Reminder Type</label>
+            <select class="form-control" id="reminder_type" name="reminder_type" required>
+                <option value="popup" {% if task.reminder_type == 'popup' %}selected{% endif %}>Popup Notification</option>
+                <option value="email" {% if task.reminder_type == 'email' %}selected{% endif %}>Email Reminder</option>
+                <option value="both" {% if task.reminder_type == 'both' %}selected{% endif %}>Both</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="reminder_interval">Reminder Time</label>
+            <select class="form-control" id="reminder_interval" name="reminder_interval" required>
+                <option value="1 minute before" {% if task.reminder_interval == '1 minute before' %}selected{% endif %}>1 Minute Before</option>
+                <option value="15 minutes before" {% if task.reminder_interval == '15 minutes before' %}selected{% endif %}>15 Minutes Before</option>
+                <option value="1 hour before" {% if task.reminder_interval == '1 hour before' %}selected{% endif %}>1 Hour Before</option>
+                <option value="6 hours before" {% if task.reminder_interval == '6 hours before' %}selected{% endif %}>6 Hours Before</option>
+                <option value="1 day before" {% if task.reminder_interval == '1 day before' %}selected{% endif %}>1 Day Before</option>
+                <option value="2 days before" {% if task.reminder_interval == '2 days before' %}selected{% endif %}>2 Days Before</option>
+                <option value="1 week before" {% if task.reminder_interval == '1 week before' %}selected{% endif %}>1 Week Before</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-control" id="status" name="status" required>
+                <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn-luxury" style="flex: 2;">Update Task</button>
+            <a href="{{ url_for('dashboard') }}" class="btn-luxury btn-secondary" style="flex: 1; text-align: center;">Cancel</a>
+        </div>
+    </form>
+    
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--lavender);">
+        <a href="{{ url_for('delete_task', task_id=task.id) }}" class="btn-luxury btn-danger" style="width: 100%; text-align: center;"
+           onclick="return confirm('Are you sure you want to delete this task? This action cannot be undone.')">
+            Delete Task
+        </a>
+    </div>
+</div>
+{% endblock %}
