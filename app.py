@@ -78,13 +78,44 @@ def dashboard():
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    tasks = conn.execute("""
+    rows = conn.execute("""
         SELECT *,
-        CAST((julianday(deadline) - julianday('now')) * 86400 AS INTEGER) AS seconds_remaining
+        CAST((julianday(deadline) - julianday('now')) * 86400 AS INTEGER)
+        AS seconds_remaining
         FROM tasks
         WHERE user_id = ? AND status = 'pending'
         ORDER BY deadline
     """, (session['user_id'],)).fetchall()
+
+    tasks = []
+
+    for row in rows:
+        task = dict(row)
+        seconds = task.get('seconds_remaining', 0)
+
+        if seconds > 0:
+            days = seconds // (24 * 3600)
+            seconds %= (24 * 3600)
+            hours = seconds // 3600
+            seconds %= 3600
+            minutes = seconds // 60
+            seconds %= 60
+            task['countdown'] = {
+                'days': days,
+                'hours': hours,
+                'minutes': minutes,
+                'seconds': seconds
+            }
+        else:
+            task['countdown'] = {
+                'days': 0,
+                'hours': 0,
+                'minutes': 0,
+                'seconds': 0
+            }
+            task['overdue'] = True
+
+        tasks.append(task)
 
     weekly_tasks = conn.execute("""
         SELECT COUNT(*) FROM tasks
@@ -94,7 +125,11 @@ def dashboard():
 
     conn.close()
 
-    return render_template('dashboard.html', tasks=tasks, weekly_tasks=weekly_tasks)
+    return render_template(
+        'dashboard.html',
+        tasks=tasks,
+        weekly_tasks=weekly_tasks
+    )
 
 @app.route('/view_tasks')
 def view_tasks():
